@@ -35,11 +35,17 @@ namespace Combres
         /// <seealso cref="Mode"/>
         public string Path { get; private set; }
 
-        /// <summary>
-        /// The type of this resource.
-        /// </summary>
-        /// <seealso cref="ResourceMode"/>
-        public ResourceMode Mode { get; private set; }
+		/// <summary>
+		/// The path/URL to this resource. 
+		/// </summary>
+		/// <seealso cref="Mode"/>
+		public string FallBackPath { get; private set; }
+
+		/// <summary>
+		/// The type of this resource.
+		/// </summary>
+		/// <seealso cref="ResourceMode"/>
+		public ResourceMode Mode { get; private set; }
 
         /// <summary>
         /// Whether cookie should be fowarded or not.
@@ -70,19 +76,20 @@ namespace Combres
             Minifier = copy.Minifier;
         }
 
-        internal Resource(ResourceSet parent, XElement xe)
-        {
-            ParentSet = parent;
-            Path = xe.Attr<string>(SchemaConstants.Resource.Path);
-            Mode = xe.Attr(SchemaConstants.Resource.Mode, Default.Resource.Mode);
-            ForwardCookie = xe.Attr(SchemaConstants.Resource.ForwardCookie,
-                Default.Resource.ForwardCookie);
-            Minifier = ParentSet.Type == ResourceType.JS
-                ? ModelUtils.LoadMinifier(xe, SchemaConstants.Resource.MinifierRef, ParentSet.Minifier.Name, ParentSet.Settings.JSMinifierMap)
-                : ModelUtils.LoadMinifier(xe, SchemaConstants.Resource.MinifierRef, ParentSet.Minifier.Name, ParentSet.Settings.CssMinifierMap);
-            if (Mode == ResourceMode.Static && ForwardCookie)
-                throw new XmlSchemaException("ForwardCookie must not be True when Mode is Static");
-        }
+		internal Resource(ResourceSet parent, XElement xe)
+		{
+			ParentSet = parent;
+			Path = xe.Attr<string>(SchemaConstants.Resource.Path);
+			FallBackPath = xe.Attr<string>(SchemaConstants.Resource.FallBackPath, string.Empty);
+			Mode = xe.Attr(SchemaConstants.Resource.Mode, Default.Resource.Mode);
+			ForwardCookie = xe.Attr(SchemaConstants.Resource.ForwardCookie,
+				Default.Resource.ForwardCookie);
+			Minifier = ParentSet.Type == ResourceType.JS
+				? ModelUtils.LoadMinifier(xe, SchemaConstants.Resource.MinifierRef, ParentSet.Minifier.Name, ParentSet.Settings.JSMinifierMap)
+				: ModelUtils.LoadMinifier(xe, SchemaConstants.Resource.MinifierRef, ParentSet.Minifier.Name, ParentSet.Settings.CssMinifierMap);
+			if (Mode == ResourceMode.Static && ForwardCookie)
+				throw new XmlSchemaException("ForwardCookie must not be True when Mode is Static");
+		}
 
         /// <summary>
         /// Returns true if both resources share the same value for <see cref="Path"/> (case insensitive), <see cref="Mode"/>, and

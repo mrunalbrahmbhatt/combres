@@ -251,8 +251,20 @@ namespace Combres
                                       select HostingEnvironment.MapPath(resource.Path))
                 .Concat(new[] {combresConfigPath}).ToList();
 
-            var directoriesToWatch = staticFilesToWatch
-                .Select(Path.GetDirectoryName).Distinct();
+
+			var fallbackstaticFilesToWatch = (from rs in settings.ResourceSets
+											  where rs.IsAutoVersion
+											  from resource in rs.Resources
+											  where resource.FallBackPath != string.Empty
+											  && resource.Mode == ResourceMode.Dynamic
+											  select HostingEnvironment.MapPath(resource.FallBackPath))
+			   .Concat(new[] { combresConfigPath }).ToList();
+
+			if (fallbackstaticFilesToWatch != null && fallbackstaticFilesToWatch.Count > 0 && staticFilesToWatch != null)
+				staticFilesToWatch.AddRange(fallbackstaticFilesToWatch);
+
+			var directoriesToWatch = staticFilesToWatch
+				.Select(Path.GetDirectoryName).Distinct();
 
             foreach (var directory in directoriesToWatch)
             {
@@ -288,6 +300,20 @@ namespace Combres
                                                                                         StringComparison.
                                                                                             OrdinalIgnoreCase)
                                                                                 select resource.Path).Distinct().ToList();
+												   var modifiedDynamicResourcePaths = (from rs in settings.ResourceSets
+																					   where rs.IsAutoVersion
+																					   from resource in rs.Resources
+																					   where
+																						   resource.Mode == ResourceMode.Dynamic
+																						   && resource.FallBackPath != string.Empty
+																						   && path.Equals(
+																							   HostingEnvironment.MapPath(
+																								   resource.FallBackPath),
+																							   StringComparison.
+																								   OrdinalIgnoreCase)
+																					   select resource.FallBackPath).Distinct().ToList();
+												   if (modifiedResourcePaths != null)
+													   modifiedResourcePaths.AddRange(modifiedDynamicResourcePaths);
                                                    if (modifiedResourcePaths.Count > 0)
                                                    {
                                                        if (Log.IsDebugEnabled)

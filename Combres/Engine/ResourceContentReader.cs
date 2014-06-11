@@ -16,6 +16,7 @@
 // The latest version of this file can be found at http://combres.codeplex.com
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -73,36 +74,63 @@ namespace Combres
             switch (resource.Mode)
             {
                 case ResourceMode.Dynamic:
-                    var absoluteUrl = resource.Path.ToAbsoluteUrl();
-                    if (absoluteUrl == null)
-                        throw new ResourceNotFoundException(resource.Path);
-                    try
-                    {
-                        using (var webClient = new WebClient())
-                        {
-                            if (resource.ForwardCookie)
-                            {
-                                var context = HttpContext.Current;
-                                if (context == null)
-                                    throw new CombresException("HttpContext must present to forward cookie");
-                                webClient.Headers[HttpRequestHeader.Cookie] = context.Request.Headers["Cookie"];
-                            }
-                            webClient.Headers[HttpRequestHeader.AcceptEncoding] = "gzip,deflate";
-                            var bytes = webClient.DownloadData(absoluteUrl);
-                            var acceptEncoding = webClient.ResponseHeaders[HttpResponseHeader.ContentEncoding];
-                            if (acceptEncoding != null)
-                            {
-                                if (acceptEncoding.Contains("gzip"))
-                                    bytes = bytes.UnGzip();
-                                else if (acceptEncoding.Contains("deflate"))
-                                    bytes = bytes.UnDeflate();
-                            }
-                            content = Encoding.UTF8.GetString(bytes);
-                        }
-                    }
-                    catch (WebException ex)
-                    {
-                        throw new ResourceNotFoundException(resource.Path, ex);
+					try
+					{
+						var absoluteUrl = resource.Path.ToAbsoluteUrl();
+						if (string.IsNullOrEmpty(absoluteUrl))
+						{
+							throw new ResourceNotFoundException(resource.Path);
+						}
+
+						using (var webClient = new WebClient())
+						{
+							if (resource.ForwardCookie)
+							{
+								var context = HttpContext.Current;
+								if (context == null)
+									throw new CombresException("HttpContext must present to forward cookie");
+								webClient.Headers[HttpRequestHeader.Cookie] = context.Request.Headers["Cookie"];
+							}
+							webClient.Headers[HttpRequestHeader.AcceptEncoding] = "gzip,deflate";
+							var bytes = webClient.DownloadData(absoluteUrl);
+							var acceptEncoding = webClient.ResponseHeaders[HttpResponseHeader.ContentEncoding];
+							if (acceptEncoding != null)
+							{
+								if (acceptEncoding.Contains("gzip"))
+									bytes = bytes.UnGzip();
+								else if (acceptEncoding.Contains("deflate"))
+									bytes = bytes.UnDeflate();
+							}
+							content = Encoding.UTF8.GetString(bytes);
+						}
+					}
+					catch (WebException ex)
+					{
+						if (!string.IsNullOrEmpty(resource.FallBackPath))
+						{
+							var fallbackPath = HostingEnvironment.MapPath(resource.FallBackPath);
+							if (string.IsNullOrEmpty(fallbackPath) || !File.Exists(fallbackPath))
+								throw new ResourceNotFoundException(resource.FallBackPath);
+							content = File.ReadAllText(fallbackPath);
+						}
+						else
+						{
+							throw new ResourceNotFoundException(resource.Path, ex);
+						}
+					}
+					catch (Exception ex)
+					{
+						if (!string.IsNullOrEmpty(resource.FallBackPath))
+						{
+							var fallbackPath = HostingEnvironment.MapPath(resource.FallBackPath);
+							if (string.IsNullOrEmpty(fallbackPath) || !File.Exists(fallbackPath))
+								throw new ResourceNotFoundException(resource.FallBackPath);
+							content = File.ReadAllText(fallbackPath);
+						}
+						else
+						{
+							throw new ResourceNotFoundException(resource.Path, ex);
+						}
                     }
                     break;
                 default:

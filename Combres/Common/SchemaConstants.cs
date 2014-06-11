@@ -69,6 +69,7 @@ namespace Combres
             public const string Mode = "mode";
             public const string ForwardCookie = "forwardCookie";
             public const string MinifierRef = "minifierRef";
+			public const string FallBackPath = "fallbackpath";
         }
 
         public static class Binder
