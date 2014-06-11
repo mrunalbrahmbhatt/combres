@@ -62,6 +62,7 @@ Change Log
 2.2.2.19
 * Add fallbackpath property for dynamic urls.
 * fallbackpath should be static local path
+
 2.2.2.18
 * Only support .NET 4.0 or above. .NET 3.5 users should use Combres 2.2.2.17.
 * Use Fasterflect 2.1.3
