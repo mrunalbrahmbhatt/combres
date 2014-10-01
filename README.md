@@ -59,6 +59,15 @@ That should be it. Start your browser to observe Combres in action. For more adv
 
 Change Log
 ---------------
+2.3.0.1
+* Local of Google Closure Compiler support.
+* Use to the IKVM.
+* Compile compiler.jar for compiler.dll
+* JDK is no longer required.
+* Updated Use dotLess 1.4.1.0, AjaxMin 5.11.5295.12309 and Log4Net 2.0.3
+* Updated Build folder
+
+
 2.2.2.19
 * Add fallbackpath property for dynamic urls.
 * fallbackpath should be static local path
