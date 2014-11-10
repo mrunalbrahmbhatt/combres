@@ -296,7 +296,7 @@ namespace Combres
         {
             get
             {
-                return ResourceSets.FirstOrDefault(resource => resource.Name == setName);
+                return ResourceSets.FirstOrDefault(resource => resource.Name.ToLowerInvariant() == setName.ToLowerInvariant());
             }
         }
     }
